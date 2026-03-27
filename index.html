@@ -16,15 +16,27 @@
         // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
         // IMPORTANT: Do NOT commit your actual API key / metadata to public repos.
         // This app tries to load a local file `firebase-config.local.js` for secrets if present.
-        const firebaseConfig = {
-            apiKey: "AIzaSyDgbJ7-mBK1RgDZYIiJ8nTNdGP85rjiXGI",
-            authDomain: "scrum-collaboration.firebaseapp.com",
-            databaseURL: "https://scrum-collaboration-default-rtdb.firebaseio.com",
-            projectId: "scrum-collaboration",
-            storageBucket: "scrum-collaboration.firebasestorage.app",
-            messagingSenderId: "573194507689",
-            appId: "1:573194507689:web:1a535f52d4afc6a8fce0b8"
+        const defaultConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
+
+        let firebaseConfig = defaultConfig;
+
+        // Load local config file if it exists, without committing real credentials
+        try {
+            const localConfig = await import('./firebase-config.local.js');
+            if (localConfig && localConfig.firebaseConfig) {
+                firebaseConfig = localConfig.firebaseConfig;
+            }
+        } catch (error) {
+            console.info('Local Firebase config not found, using placeholder config.');
+        }
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);

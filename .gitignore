@@ -1,0 +1,3 @@
+node_modules/
+# Local Firebase credentials (do not commit)
+firebase-config.local.js
