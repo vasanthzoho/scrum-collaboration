@@ -786,6 +786,11 @@
 
         clearBtn.addEventListener('click', () => {
             questionInput.value = '';
+            state.questions = [];
+            initializeVotes();
+            renderQuestions();
+            renderAnswerCards();
+            updateQuestionCount();
         });
 
         addAnswerBtn.addEventListener('click', () => {
@@ -804,8 +809,18 @@
 
         resetBtn.addEventListener('click', () => {
             if (confirm('⚠️ Reset all votes? This cannot be undone.')) {
+                state.questions = [
+                    { id: 1, text: 'Question1' },
+                    { id: 2, text: 'question2' },
+                    { id: 3, text: 'Question 3' },
+                    { id: 4, text: 'question 4' },
+                    { id: 5, text: 'question 5' }
+                ];
+                questionInput.value = '';
                 initializeVotes();
                 renderQuestions();
+                renderAnswerCards();
+                updateQuestionCount();
             }
         });
 
