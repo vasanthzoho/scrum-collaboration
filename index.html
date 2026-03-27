@@ -812,11 +812,7 @@
             // Listen for answers changes
             onValue(answersRef, (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    state.answers = Object.values(data);
-                } else {
-                    state.answers = ['Answer A', 'Answer B', 'Answer C'];
-                }
+                state.answers = data ? Object.values(data) : [];
                 renderAnswerCards();
                 renderQuestions();
             });
@@ -824,17 +820,7 @@
             // Listen for questions changes
             onValue(questionsRef, (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    state.questions = Object.values(data);
-                } else {
-                    state.questions = [
-                        { id: 1, text: 'Question 1' },
-                        { id: 2, text: 'Question 2' },
-                        { id: 3, text: 'Question 3' },
-                        { id: 4, text: 'Question 4' },
-                        { id: 5, text: 'Question 5' }
-                    ];
-                }
+                state.questions = data ? Object.values(data) : [];
                 renderQuestions();
                 updateQuestionCount();
             });
@@ -1202,6 +1188,16 @@
                 reason: event.reason
             });
         });
+
+        // ============ INITIALIZE ============
+        initializeFirebase();
+        // Start empty; user will create questions and answers manually
+        state.answers = [];
+        state.questions = [];
+        initializeVotes();
+        renderQuestions();
+        renderAnswerCards();
+        updateQuestionCount();
     </script>
 </body>
 </html>
