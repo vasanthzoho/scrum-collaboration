@@ -3,8 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com; frame-ancestors 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Team Discussion Board</title>
-    <style>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgbJ7-mBK1RgDZYIiJ8nTNdGP85rjiXGI",
+            authDomain: "scrum-collaboration.firebaseapp.com",
+            databaseURL: "https://scrum-collaboration-default-rtdb.firebaseio.com",
+            projectId: "scrum-collaboration",
+            storageBucket: "scrum-collaboration.firebasestorage.app",
+            messagingSenderId: "573194507689",
+            appId: "1:573194507689:web:0b5372827abe095bfce0b8"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+
+        // Make Firebase services available globally
+        window.database = database;
+        window.auth = auth;
+        window.ref = ref;
+        window.set = set;
+        window.onValue = onValue;
+        window.push = push;
+        window.update = update;
+        window.signInAnonymously = signInAnonymously;
+        window.onAuthStateChanged = onAuthStateChanged;
+    </script>
         * {
             margin: 0;
             padding: 0;
@@ -641,17 +676,183 @@
     </div>
 
     <script>
+        // ============ FIREBASE STATE MANAGEMENT ============
+        let database, auth, ref, set, onValue, push, update, signInAnonymously, onAuthStateChanged;
+        let roomId = 'default-room';
+        let isAuthenticated = false;
+
+        // Wait for Firebase to load
+        function initializeFirebase() {
+            if (typeof window.database === 'undefined') {
+                setTimeout(initializeFirebase, 100);
+                return;
+            }
+            
+            database = window.database;
+            auth = window.auth;
+            ref = window.ref;
+            set = window.set;
+            onValue = window.onValue;
+            push = window.push;
+            update = window.update;
+            signInAnonymously = window.signInAnonymously;
+            onAuthStateChanged = window.onAuthStateChanged;
+            
+            // Check if Firebase is properly configured
+            if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
+                showConfigMessage();
+                return;
+            }
+            
+            // Authenticate anonymously
+            authenticateUser();
+        }
+
+        function authenticateUser() {
+            signInAnonymously(auth)
+                .then(() => {
+                    console.log('User authenticated anonymously');
+                    isAuthenticated = true;
+                    setupRealtimeSync();
+                })
+                .catch((error) => {
+                    console.error('Authentication failed:', error);
+                    showAuthError();
+                });
+
+            // Listen for auth state changes
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    isAuthenticated = true;
+                } else {
+                    isAuthenticated = false;
+                }
+            });
+        }
+
+        function showAuthError() {
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                text-align: center;
+                max-width: 400px;
+            `;
+            message.innerHTML = `
+                <h2 style="color: #dc3545; margin-bottom: 20px;">🔒 Authentication Failed</h2>
+                <p style="margin-bottom: 20px; line-height: 1.5;">
+                    Unable to authenticate with Firebase. Please check your configuration and try again.
+                </p>
+                <button onclick="location.reload()" style="
+                    background: #4a5fc1;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                ">Retry</button>
+            `;
+            document.body.appendChild(message);
+        }
+
+        function showConfigMessage() {
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                text-align: center;
+                max-width: 400px;
+            `;
+            message.innerHTML = `
+                <h2 style="color: #dc3545; margin-bottom: 20px;">🔧 Setup Required</h2>
+                <p style="margin-bottom: 20px; line-height: 1.5;">
+                    To enable real-time collaboration, you need to configure Firebase:
+                </p>
+                <ol style="text-align: left; margin-bottom: 20px;">
+                    <li>Go to <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                    <li>Create a new project</li>
+                    <li>Enable Realtime Database</li>
+                    <li>Copy your config and replace the placeholders in this file</li>
+                </ol>
+                <button onclick="this.parentElement.remove()" style="
+                    background: #4a5fc1;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                ">I'll configure Firebase later</button>
+            `;
+            document.body.appendChild(message);
+        }
+
+        function setupRealtimeSync() {
+            // References to Firebase paths
+            const answersRef = ref(database, `rooms/${roomId}/answers`);
+            const questionsRef = ref(database, `rooms/${roomId}/questions`);
+            const votesRef = ref(database, `rooms/${roomId}/votes`);
+
+            // Listen for answers changes
+            onValue(answersRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    state.answers = Object.values(data);
+                } else {
+                    state.answers = ['Answer A', 'Answer B', 'Answer C'];
+                }
+                renderAnswerCards();
+                renderQuestions();
+            });
+
+            // Listen for questions changes
+            onValue(questionsRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    state.questions = Object.values(data);
+                } else {
+                    state.questions = [
+                        { id: 1, text: 'Question 1' },
+                        { id: 2, text: 'Question 2' },
+                        { id: 3, text: 'Question 3' },
+                        { id: 4, text: 'Question 4' },
+                        { id: 5, text: 'Question 5' }
+                    ];
+                }
+                renderQuestions();
+                updateQuestionCount();
+            });
+
+            // Listen for votes changes
+            onValue(votesRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    state.votes = data;
+                } else {
+                    initializeVotes();
+                }
+                renderQuestions();
+            });
+        }
+
         // ============ STATE MANAGEMENT ============
         const state = {
-            answers: ['Answer A', 'Answer B', 'Answer C'],
-            questions: [
-                { id: 1, text: 'Question1' },
-                { id: 2, text: 'question2' },
-                { id: 3, text: 'Question 3' },
-                { id: 4, text: 'question 4' },
-                { id: 5, text: 'question 5' }
-            ],
-            votes: {} // { questionId: { answerText: count } }
+            answers: [],
+            questions: [],
+            votes: {}
         };
 
         // Initialize votes
@@ -663,11 +864,21 @@
                     state.votes[q.id][a] = 0;
                 });
             });
+            // Sync to Firebase
+            if (database) {
+                const votesRef = ref(database, `rooms/${roomId}/votes`);
+                set(votesRef, state.votes);
+            }
         }
 
-        initializeVotes();
-
-        // ============ DOM ELEMENTS ============
+        // Input sanitization function
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return '';
+            return input
+                .trim()
+                .replace(/[<>]/g, '') // Remove potential HTML tags
+                .substring(0, 200); // Limit length
+        }
         const questionsContainer = document.getElementById('questionsContainer');
         const answerCardsContainer = document.getElementById('answerCards');
         const questionInput = document.getElementById('questionInput');
@@ -806,20 +1017,19 @@
 
             if (!draggedCard) return;
 
-            const answer = draggedCard.dataset.answer;
-
-            // Update vote
-            if (state.votes[questionId] && state.votes[questionId].hasOwnProperty(answer)) {
-                state.votes[questionId][answer]++;
-
-                // Animate counter
-                const card = document.querySelector(`.question-card[data-question-id="${questionId}"]`);
-                const counter = card.querySelector(`.answer-counter[data-answer="${answer}"]`);
-                counter.textContent = state.votes[questionId][answer];
-                counter.classList.add('pop');
-
-                setTimeout(() => counter.classList.remove('pop'), 500);
+            if (!isAuthenticated) {
+                alert('Please wait for authentication to complete.');
+                return;
             }
+
+            const answer = draggedCard.dataset.answer;
+            const votesRef = ref(database, `rooms/${roomId}/votes/${questionId}/${answer}`);
+
+            // Increment vote in Firebase
+            onValue(votesRef, (snapshot) => {
+                const currentVotes = snapshot.val() || 0;
+                set(votesRef, currentVotes + 1);
+            }, { onlyOnce: true });
         }
 
         // ============ EVENT LISTENERS ============
@@ -830,75 +1040,131 @@
                 return;
             }
 
-            const newQuestions = lines.map((text, idx) => ({
-                id: Math.max(...state.questions.map(q => q.id), 0) + idx + 1,
-                text: text.trim()
-            }));
+            if (!isAuthenticated) {
+                alert('Please wait for authentication to complete.');
+                return;
+            }
 
-            state.questions.push(...newQuestions);
-            initializeVotes();
-            renderQuestions();
-            renderAnswerCards();
-            updateQuestionCount();
-            questionInput.value = '';
+            const questionsRef = ref(database, `rooms/${roomId}/questions`);
+            
+            // Get current questions to determine next ID
+            onValue(questionsRef, (snapshot) => {
+                const currentQuestions = snapshot.val() || {};
+                const maxId = Math.max(...Object.values(currentQuestions).map(q => q.id || 0), 0);
+                
+                const newQuestions = lines.map((text, idx) => ({
+                    id: maxId + idx + 1,
+                    text: sanitizeInput(text.trim())
+                }));
+
+                // Update Firebase
+                const updates = {};
+                newQuestions.forEach(q => {
+                    const newKey = push(questionsRef).key;
+                    updates[newKey] = q;
+                });
+                
+                update(questionsRef, updates);
+                questionInput.value = '';
+            }, { onlyOnce: true });
         });
 
         clearBtn.addEventListener('click', () => {
-            questionInput.value = '';
-            state.questions = [];
-            initializeVotes();
-            renderQuestions();
-            renderAnswerCards();
-            updateQuestionCount();
+            if (!isAuthenticated) {
+                alert('Please wait for authentication to complete.');
+                return;
+            }
+
+            if (confirm('Clear all questions? This will affect all users.')) {
+                const questionsRef = ref(database, `rooms/${roomId}/questions`);
+                set(questionsRef, null);
+                questionInput.value = '';
+            }
         });
 
         addAnswerBtn.addEventListener('click', () => {
-            const newAnswer = newAnswerInput.value.trim();
-            if (!newAnswer || state.answers.includes(newAnswer)) {
-                alert('Invalid or duplicate answer');
+            const newAnswer = sanitizeInput(newAnswerInput.value);
+            if (!newAnswer) {
+                alert('Please enter an answer');
                 return;
             }
 
-            state.answers.push(newAnswer);
-            initializeVotes();
-            renderQuestions();
-            renderAnswerCards();
-            newAnswerInput.value = '';
+            if (!isAuthenticated) {
+                alert('Please wait for authentication to complete.');
+                return;
+            }
+
+            const answersRef = ref(database, `rooms/${roomId}/answers`);
+            
+            // Check for duplicates
+            onValue(answersRef, (snapshot) => {
+                const currentAnswers = snapshot.val() || {};
+                const answersArray = Object.values(currentAnswers);
+                
+                if (answersArray.includes(newAnswer)) {
+                    alert('Answer already exists');
+                    return;
+                }
+
+                // Add to Firebase
+                const newKey = push(answersRef).key;
+                const updates = {};
+                updates[newKey] = newAnswer;
+                update(answersRef, updates);
+                newAnswerInput.value = '';
+            }, { onlyOnce: true });
         });
 
         removeAnswerBtn.addEventListener('click', () => {
-            if (state.answers.length === 0) {
-                alert('No answers to remove.');
+            if (!isAuthenticated) {
+                alert('Please wait for authentication to complete.');
                 return;
             }
 
-            const removedAnswer = state.answers.pop();
+            const answersRef = ref(database, `rooms/${roomId}/answers`);
+            
+            onValue(answersRef, (snapshot) => {
+                const currentAnswers = snapshot.val() || {};
+                const keys = Object.keys(currentAnswers);
+                
+                if (keys.length === 0) {
+                    alert('No answers to remove.');
+                    return;
+                }
 
-            // Remove votes for the deleted answer
-            state.questions.forEach(q => {
-                delete state.votes[q.id][removedAnswer];
-            });
-
-            initializeVotes();
-            renderQuestions();
-            renderAnswerCards();
-            newAnswerInput.value = '';
+                if (confirm('Remove the last answer? This will affect all users.')) {
+                    const lastKey = keys[keys.length - 1];
+                    const updates = {};
+                    updates[lastKey] = null;
+                    update(answersRef, updates);
+                }
+            }, { onlyOnce: true });
         });
 
         resetBtn.addEventListener('click', () => {
-            if (confirm('⚠️ Reset all votes? This cannot be undone.')) {
-                state.questions = [
-                    { id: 1, text: 'Question1' },
-                    { id: 2, text: 'question2' },
-                    { id: 3, text: 'Question 3' },
-                    { id: 4, text: 'question 4' },
-                    { id: 5, text: 'question 5' }
-                ];
-                questionInput.value = '';
-                initializeVotes();
-                renderQuestions();
-                renderAnswerCards();
-                updateQuestionCount();
+            if (!isAuthenticated) {
+                alert('Please wait for authentication to complete.');
+                return;
+            }
+
+            if (confirm('⚠️ Reset all votes? This cannot be undone and will affect all users.')) {
+                const roomRef = ref(database, `rooms/${roomId}`);
+                const defaultData = {
+                    answers: {
+                        a: 'Answer A',
+                        b: 'Answer B', 
+                        c: 'Answer C'
+                    },
+                    questions: {
+                        q1: { id: 1, text: 'Question 1' },
+                        q2: { id: 2, text: 'Question 2' },
+                        q3: { id: 3, text: 'Question 3' },
+                        q4: { id: 4, text: 'Question 4' },
+                        q5: { id: 5, text: 'Question 5' }
+                    },
+                    votes: {}
+                };
+                set(roomRef, defaultData);
             }
         });
 
@@ -912,10 +1178,27 @@
             questionCountDisplay.textContent = `${state.questions.length} Question${state.questions.length !== 1 ? 's' : ''}`;
         }
 
-        // ============ INITIALIZE ============
-        renderQuestions();
-        renderAnswerCards();
-        updateQuestionCount();
+        // Security monitoring
+        function logSecurityEvent(event, details) {
+            console.warn(`Security Event: ${event}`, details);
+            // In production, you might want to send this to a logging service
+        }
+
+        // Enhanced error handling
+        window.addEventListener('error', (event) => {
+            logSecurityEvent('JavaScript Error', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            logSecurityEvent('Unhandled Promise Rejection', {
+                reason: event.reason
+            });
+        });
     </script>
 </body>
 </html>

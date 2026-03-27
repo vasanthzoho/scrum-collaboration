@@ -1,0 +1,33 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "rooms": {
+      "$roomId": {
+        ".read": true,
+        ".write": "auth != null",
+        "answers": {
+          ".read": true,
+          ".write": "auth != null"
+        },
+        "questions": {
+          ".read": true,
+          ".write": "auth != null"
+        },
+        "votes": {
+          ".read": true,
+          ".write": "auth != null",
+          "$questionId": {
+            ".read": true,
+            ".write": "auth != null",
+            "$answer": {
+              ".read": true,
+              ".write": "auth != null && newData.val() == (data.val() || 0) + 1",
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000"
+            }
+          }
+        }
+      }
+    }
+  }
+}
