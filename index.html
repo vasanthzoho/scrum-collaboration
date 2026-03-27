@@ -14,14 +14,16 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
+        // IMPORTANT: Do NOT commit your actual API key / metadata to public repos.
+        // Rotate this key immediately in Firebase Console and use environment variables for production.
         const firebaseConfig = {
-            apiKey: "AIzaSyDgbJ7-mBK1RgDZYIiJ8nTNdGP85rjiXGI",
-            authDomain: "scrum-collaboration.firebaseapp.com",
-            databaseURL: "https://scrum-collaboration-default-rtdb.firebaseio.com",
-            projectId: "scrum-collaboration",
-            storageBucket: "scrum-collaboration.firebasestorage.app",
-            messagingSenderId: "573194507689",
-            appId: "1:573194507689:web:0b5372827abe095bfce0b8"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         // Initialize Firebase
