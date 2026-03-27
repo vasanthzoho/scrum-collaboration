@@ -466,6 +466,7 @@
             border-radius: 6px;
             font-size: 0.9em;
             transition: all 0.3s ease;
+            margin-bottom: 10px;
         }
 
         .add-answer-input:focus {
@@ -474,23 +475,53 @@
             box-shadow: 0 0 0 3px rgba(74, 95, 193, 0.1);
         }
 
-        .remove-btn {
+        .answer-buttons {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .btn-answer-action {
             background: white;
             border: 1px solid #e0e0e0;
-            color: #dc3545;
+            color: #333;
             padding: 8px 12px;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             font-size: 0.85em;
-            margin-top: 10px;
             width: 100%;
             transition: all 0.3s ease;
         }
 
-        .remove-btn:hover {
+        .btn-add-answer {
+            background: #4a5fc1;
+            color: white;
+            border: 1px solid #4a5fc1;
+        }
+
+        .btn-add-answer:hover {
+            background: #3a4fa5;
+            border-color: #3a4fa5;
+        }
+
+        .btn-remove-answer {
+            background: white;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .btn-remove-answer:hover {
             background: #fff5f5;
             border-color: #dc3545;
+        }
+
+        .btn-remove-answer:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
+            color: #999;
+            border-color: #ddd;
         }
 
         /* ============ RESPONSIVE ============ */
@@ -592,7 +623,10 @@
                     <div class="add-answer-label">Add Answer Option</div>
                     <input type="text" class="add-answer-input" id="newAnswerInput" 
                         placeholder="e.g. Strategy D">
-                    <button class="remove-btn" id="addAnswerBtn">➕ Add Answer</button>
+                    <div class="answer-buttons">
+                        <button class="btn-answer-action btn-add-answer" id="addAnswerBtn">➕ Add Answer</button>
+                        <button class="btn-answer-action btn-remove-answer" id="removeAnswerBtn">✕ Remove Last</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -635,6 +669,7 @@
         const questionCountDisplay = document.getElementById('questionCount');
         const newAnswerInput = document.getElementById('newAnswerInput');
         const addAnswerBtn = document.getElementById('addAnswerBtn');
+        const removeAnswerBtn = document.getElementById('removeAnswerBtn');
         const collapseBtn = document.getElementById('collapseBtn');
         const builderForm = document.getElementById('builderForm');
 
@@ -713,6 +748,14 @@
 
                 answerCardsContainer.appendChild(card);
             });
+
+            // Update remove button state
+            updateRemoveButtonState();
+        }
+
+        function updateRemoveButtonState() {
+            // Disable remove button if only 3 default answers exist
+            removeAnswerBtn.disabled = state.answers.length <= 3;
         }
 
         // ============ DRAG & DROP ============
@@ -801,6 +844,25 @@
             }
 
             state.answers.push(newAnswer);
+            initializeVotes();
+            renderQuestions();
+            renderAnswerCards();
+            newAnswerInput.value = '';
+        });
+
+        removeAnswerBtn.addEventListener('click', () => {
+            if (state.answers.length <= 3) {
+                alert('Cannot remove default answers. You must keep at least 3 answers.');
+                return;
+            }
+
+            const removedAnswer = state.answers.pop();
+
+            // Remove votes for the deleted answer
+            state.questions.forEach(q => {
+                delete state.votes[q.id][removedAnswer];
+            });
+
             initializeVotes();
             renderQuestions();
             renderAnswerCards();
