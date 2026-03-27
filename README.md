@@ -29,21 +29,27 @@ A real-time collaborative discussion board where team members can drag-and-drop 
 ### 2. Configure the App
 
 1. Open `index.html`
-2. Replace the `firebaseConfig` object with your Firebase config:
+2. The app automatically loads Firebase config in this priority order:
+   - `firebase-config.deploy.js` (for production deployment)
+   - `firebase-config.local.js` (for local development)
+   - Placeholder config (fallback, won't connect to Firebase)
 
-```javascript
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
+#### For Local Development:
+- Copy `firebase-config.sample.js` to `firebase-config.local.js`
+- Add your real Firebase config values to `firebase-config.local.js`
+
+#### For Production Deployment:
+- Copy `firebase-config.sample.js` to `firebase-config.deploy.js`
+- Add your real Firebase config values to `firebase-config.deploy.js`
+- **Important**: Never commit `firebase-config.deploy.js` to the repository
+- Use build-time injection or manual file placement for deployment
+
+#### Alternative: Build-time Config Injection
+For automated deployments, you can inject config during build:
+```bash
+# Example: Replace placeholders in build script
+sed -i 's/YOUR_API_KEY/your-real-api-key/g' index.html
 ```
-
-> Important: do not commit real Firebase config values in a public repo. Use environment variables or secret management for deployment and rotate keys immediately when they are exposed.
 
 
 ### 3. Deploy to GitHub Pages

@@ -1,3 +1,5 @@
 node_modules/
 # Local Firebase credentials (do not commit)
 firebase-config.local.js
+# Deployment Firebase credentials (do not commit)
+firebase-config.deploy.js

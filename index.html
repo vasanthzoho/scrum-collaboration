@@ -16,6 +16,7 @@
         // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
         // IMPORTANT: Do NOT commit your actual API key / metadata to public repos.
         // This app tries to load a local file `firebase-config.local.js` for secrets if present.
+        // For deployment, use firebase-config.deploy.js (not committed)
         const defaultConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -28,14 +29,22 @@
 
         let firebaseConfig = defaultConfig;
 
-        // Load local config file if it exists, without committing real credentials
+        // Load deployment config first (for production)
         try {
-            const localConfig = await import('./firebase-config.local.js');
-            if (localConfig && localConfig.firebaseConfig) {
-                firebaseConfig = localConfig.firebaseConfig;
+            const deployConfig = await import('./firebase-config.deploy.js');
+            if (deployConfig && deployConfig.firebaseConfig) {
+                firebaseConfig = deployConfig.firebaseConfig;
             }
         } catch (error) {
-            console.info('Local Firebase config not found, using placeholder config.');
+            // Deployment config not found, try local config
+            try {
+                const localConfig = await import('./firebase-config.local.js');
+                if (localConfig && localConfig.firebaseConfig) {
+                    firebaseConfig = localConfig.firebaseConfig;
+                }
+            } catch (localError) {
+                console.info('No Firebase config found, using placeholder config.');
+            }
         }
 
         // Initialize Firebase
