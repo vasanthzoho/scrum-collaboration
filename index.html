@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrum Team Engagement - Interactive Session</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: slideDown 0.6s ease;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .questions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .questions-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .questions-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .questions-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .questions-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .question-box {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .question-box:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .question-box.drag-over {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f9f7ff 100%);
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3), 0 6px 20px rgba(0, 0, 0, 0.15);
+            transform: scale(1.02);
+        }
+
+        .question-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .answers-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .answer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.2s ease;
+        }
+
+        .answer-item:hover {
+            background: #f0f4ff;
+        }
+
+        .answer-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .answer-counter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2em;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .answer-counter.pop {
+            animation: popAnimation 0.5s ease;
+        }
+
+        @keyframes popAnimation {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            }
+            50% {
+                transform: scale(1.2);
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sidebar {
+            width: 30%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .flashcard-dock {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            height: fit-content;
+            max-height: calc(100vh - 40px);
+        }
+
+        .dock-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .flashcards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .flashcard {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1em;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            touch-action: none;
+        }
+
+        .flashcard:hover {
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .flashcard.dragging {
+            opacity: 0.7;
+            transform: scale(0.95);
+            cursor: grabbing;
+        }
+
+        .sidebar-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-export:hover {
+            box-shadow: 0 6px 16px rgba(79, 172, 254, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .stats-panel {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-top: 2px solid #667eea;
+        }
+
+        .stats-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .flashcard-dock {
+                position: static;
+                max-height: none;
+            }
+
+            .questions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Drag feedback cursor */
+        .question-box[draggable="true"] {
+            cursor: grab;
+        }
+
+        .question-box[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        /* Smooth transitions */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        input, textarea, button {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            user-select: text;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>🎯 Scrum Team Engagement</h1>
+                <p>Interactive Session - Drag answer cards to vote on questions</p>
+            </div>
+            <div class="questions-grid" id="questionsGrid"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="flashcard-dock">
+                <div class="dock-title">📇 Answer Cards</div>
+                <div class="flashcards-container">
+                    <div class="flashcard" draggable="true" data-answer="Answer A">Answer A</div>
+                    <div class="flashcard" draggable="true" data-answer="Answer B">Answer B</div>
+                    <div class="flashcard" draggable="true" data-answer="Answer C">Answer C</div>
+                </div>
+                <div class="sidebar-controls">
+                    <button class="btn btn-reset" id="resetBtn">↻ Reset All</button>
+                    <button class="btn btn-export" id="exportBtn">⬇️ Export Results</button>
+                </div>
+                <div class="stats-panel">
+                    <div class="stats-label">Total Votes</div>
+                    <div class="stats-value" id="totalVotes">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ DATA STRUCTURE ============
+        const state = {
+            questions: Array.from({ length: 10 }, (_, i) => ({
+                id: i + 1,
+                title: `Question ${i + 1}`,
+                answers: {
+                    'Answer A': 0,
+                    'Answer B': 0,
+                    'Answer C': 0
+                }
+            }))
+        };
+
+        // ============ DOM ELEMENTS ============
+        const questionsGrid = document.getElementById('questionsGrid');
+        const resetBtn = document.getElementById('resetBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const totalVotesDisplay = document.getElementById('totalVotes');
+        const flashcards = document.querySelectorAll('.flashcard');
+
+        // ============ INITIALIZATION ============
+        function initializeQuestions() {
+            questionsGrid.innerHTML = '';
+            state.questions.forEach((question) => {
+                const questionBox = document.createElement('div');
+                questionBox.className = 'question-box';
+                questionBox.draggable = false;
+                questionBox.dataset.questionId = question.id;
+
+                const titleElement = document.createElement('div');
+                titleElement.className = 'question-title';
+                titleElement.textContent = question.title;
+
+                const answersList = document.createElement('div');
+                answersList.className = 'answers-list';
+
+                Object.entries(question.answers).forEach(([answerLabel, count]) => {
+                    const answerItem = document.createElement('div');
+                    answerItem.className = 'answer-item';
+                    answerItem.dataset.answerLabel = answerLabel;
+
+                    const label = document.createElement('span');
+                    label.className = 'answer-label';
+                    label.textContent = answerLabel;
+
+                    const counter = document.createElement('div');
+                    counter.className = 'answer-counter';
+                    counter.textContent = count;
+                    counter.dataset.count = count;
+
+                    answerItem.appendChild(label);
+                    answerItem.appendChild(counter);
+                    answersList.appendChild(answerItem);
+                });
+
+                questionBox.appendChild(titleElement);
+                questionBox.appendChild(answersList);
+
+                // ============ DRAG & DROP LISTENERS ============
+                questionBox.addEventListener('dragover', handleDragOver);
+                questionBox.addEventListener('dragleave', handleDragLeave);
+                questionBox.addEventListener('drop', (e) => handleDrop(e, question.id));
+
+                questionsGrid.appendChild(questionBox);
+            });
+        }
+
+        function setupFlashcards() {
+            flashcards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        // ============ DRAG & DROP HANDLERS ============
+        let draggedCard = null;
+
+        function handleDragStart(e) {
+            draggedCard = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedCard = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            if (!e.currentTarget.classList.contains('drag-over')) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            if (e.currentTarget === e.target) {
+                e.currentTarget.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e, questionId) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            if (!draggedCard) return;
+
+            const answerLabel = draggedCard.dataset.answer;
+            const question = state.questions.find(q => q.id === questionId);
+
+            if (question && question.answers.hasOwnProperty(answerLabel)) {
+                // Increment counter
+                question.answers[answerLabel]++;
+
+                // Update DOM with animation
+                const questionBox = document.querySelector(
+                    `.question-box[data-question-id="${questionId}"]`
+                );
+                const counterElement = questionBox.querySelector(
+                    `.answer-item[data-answer-label="${answerLabel}"] .answer-counter`
+                );
+
+                counterElement.textContent = question.answers[answerLabel];
+                counterElement.classList.add('pop');
+
+                // Remove animation class after completion
+                setTimeout(() => {
+                    counterElement.classList.remove('pop');
+                }, 500);
+
+                // Update total votes
+                updateTotalVotes();
+            }
+        }
+
+        // ============ UTILITY FUNCTIONS ============
+        function updateTotalVotes() {
+            const total = state.questions.reduce((sum, question) => {
+                return sum + Object.values(question.answers).reduce((a, b) => a + b, 0);
+            }, 0);
+            totalVotesDisplay.textContent = total;
+        }
+
+        function resetAllCounters() {
+            if (confirm('⚠️ Are you sure you want to reset all counters? This cannot be undone.')) {
+                state.questions.forEach(question => {
+                    question.answers['Answer A'] = 0;
+                    question.answers['Answer B'] = 0;
+                    question.answers['Answer C'] = 0;
+                });
+
+                initializeQuestions();
+                setupFlashcards();
+                updateTotalVotes();
+            }
+        }
+
+        function exportResults() {
+            let content = '========================================\n';
+            content += 'SCRUM TEAM ENGAGEMENT - SESSION RESULTS\n';
+            content += `Generated: ${new Date().toLocaleString()}\n`;
+            content += '========================================\n\n';
+
+            state.questions.forEach(question => {
+                content += `${question.title}\n`;
+                content += '─'.repeat(40) + '\n';
+                Object.entries(question.answers).forEach(([label, count]) => {
+                    content += `  ${label}: ${count} votes\n`;
+                });
+                content += '\n';
+            });
+
+            content += '========================================\n';
+            const total = state.questions.reduce((sum, question) => {
+                return sum + Object.values(question.answers).reduce((a, b) => a + b, 0);
+            }, 0);
+            content += `TOTAL VOTES: ${total}\n`;
+            content += '========================================\n';
+
+            // Create and download file
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `scrum-engagement-results-${Date.now()}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============ EVENT LISTENERS ============
+        resetBtn.addEventListener('click', resetAllCounters);
+        exportBtn.addEventListener('click', exportResults);
+
+        // ============ STARTUP ============
+        initializeQuestions();
+        setupFlashcards();
+        updateTotalVotes();
+    </script>
+</body>
+</html>
