@@ -405,6 +405,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            min-height: 60px;
         }
 
         .answer-card {
@@ -443,6 +444,13 @@
         .answer-card.option-c {
             background: linear-gradient(135deg, #ffc107 0%, #ffcd39 100%);
             color: #333;
+        }
+
+        .empty-answers-message {
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            padding: 20px 0;
         }
 
         .add-answer-section {
@@ -731,31 +739,39 @@
 
         function renderAnswerCards() {
             answerCardsContainer.innerHTML = '';
-            state.answers.forEach((answer, idx) => {
-                const card = document.createElement('div');
-                const answerClass = ['option-a', 'option-b', 'option-c'][idx];
-                card.className = `answer-card ${answerClass}`;
-                card.draggable = true;
-                card.dataset.answer = answer;
+            
+            if (state.answers.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'empty-answers-message';
+                emptyMsg.textContent = 'No answers. Add one to continue.';
+                answerCardsContainer.appendChild(emptyMsg);
+            } else {
+                state.answers.forEach((answer, idx) => {
+                    const card = document.createElement('div');
+                    const answerClass = ['option-a', 'option-b', 'option-c'][idx];
+                    card.className = `answer-card ${answerClass}`;
+                    card.draggable = true;
+                    card.dataset.answer = answer;
 
-                const text = document.createElement('span');
-                text.textContent = answer;
+                    const text = document.createElement('span');
+                    text.textContent = answer;
 
-                card.appendChild(text);
+                    card.appendChild(text);
 
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
+                    card.addEventListener('dragstart', handleDragStart);
+                    card.addEventListener('dragend', handleDragEnd);
 
-                answerCardsContainer.appendChild(card);
-            });
+                    answerCardsContainer.appendChild(card);
+                });
+            }
 
             // Update remove button state
             updateRemoveButtonState();
         }
 
         function updateRemoveButtonState() {
-            // Disable remove button if only 3 default answers exist
-            removeAnswerBtn.disabled = state.answers.length <= 3;
+            // Enable remove button only if there are answers to remove
+            removeAnswerBtn.disabled = state.answers.length === 0;
         }
 
         // ============ DRAG & DROP ============
@@ -851,8 +867,8 @@
         });
 
         removeAnswerBtn.addEventListener('click', () => {
-            if (state.answers.length <= 3) {
-                alert('Cannot remove default answers. You must keep at least 3 answers.');
+            if (state.answers.length === 0) {
+                alert('No answers to remove.');
                 return;
             }
 
