@@ -10,7 +10,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
@@ -60,6 +60,7 @@
         window.onValue = onValue;
         window.push = push;
         window.update = update;
+        window.runTransaction = runTransaction;
         window.signInAnonymously = signInAnonymously;
         window.onAuthStateChanged = onAuthStateChanged;
     </script>
@@ -701,7 +702,7 @@
 
     <script>
         // ============ FIREBASE STATE MANAGEMENT ============
-        let database, auth, ref, set, onValue, push, update, signInAnonymously, onAuthStateChanged;
+        let database, auth, ref, set, onValue, push, update, runTransaction, signInAnonymously, onAuthStateChanged;
         let roomId = 'default-room';
         let isAuthenticated = false;
         let retryCount = 0;
@@ -724,6 +725,7 @@
             onValue = window.onValue;
             push = window.push;
             update = window.update;
+            runTransaction = window.runTransaction;
             signInAnonymously = window.signInAnonymously;
             onAuthStateChanged = window.onAuthStateChanged;
             
@@ -1045,12 +1047,13 @@
 
             const answer = draggedCard.dataset.answer;
             const votesRef = ref(database, `rooms/${roomId}/votes/${questionId}/${answer}`);
-
-            // Increment vote in Firebase
-            onValue(votesRef, (snapshot) => {
-                const currentVotes = snapshot.val() || 0;
-                set(votesRef, currentVotes + 1);
-            }, { onlyOnce: true });
+            
+            // Atomic increment using transaction
+            runTransaction(votesRef, (currentVotes) => {
+                return (currentVotes || 0) + 1;
+            }).catch(err => {
+                console.error("Vote transaction failed:", err);
+            });
         }
 
         // ============ EVENT LISTENERS ============
@@ -1071,7 +1074,8 @@
             // Get current questions to determine next ID
             onValue(questionsRef, (snapshot) => {
                 const currentQuestions = snapshot.val() || {};
-                const maxId = Math.max(...Object.values(currentQuestions).map(q => q.id || 0), 0);
+                const questionsArray = Object.values(currentQuestions);
+                const maxId = questionsArray.length > 0 ? Math.max(...questionsArray.map(q => q.id || 0)) : 0;
                 
                 const newQuestions = lines.map((text, idx) => ({
                     id: maxId + idx + 1,
@@ -1117,10 +1121,9 @@
 
             const answersRef = ref(database, `rooms/${roomId}/answers`);
             
-            // Check for duplicates
             onValue(answersRef, (snapshot) => {
                 const currentAnswers = snapshot.val() || {};
-                const answersArray = Object.values(currentAnswers);
+                const answersArray = Object.values(currentAnswers || {});
                 
                 if (answersArray.includes(newAnswer)) {
                     alert('Answer already exists');
@@ -1146,7 +1149,7 @@
             
             onValue(answersRef, (snapshot) => {
                 const currentAnswers = snapshot.val() || {};
-                const keys = Object.keys(currentAnswers);
+                const keys = Object.keys(currentAnswers || {});
                 
                 if (keys.length === 0) {
                     alert('No answers to remove.');
