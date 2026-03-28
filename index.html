@@ -704,18 +704,19 @@
         let database, auth, ref, set, onValue, push, update, signInAnonymously, onAuthStateChanged;
         let roomId = 'default-room';
         let isAuthenticated = false;
+        let retryCount = 0;
 
         // Wait for Firebase to load
         function initializeFirebase() {
             if (typeof window.database === 'undefined') {
-                if (retryCount++ > 50) {  // give up after 5 seconds
-            showConfigMessage();
-            return;
-        }
-        setTimeout(initializeFirebase, 100);
+                if (retryCount++ > 50) {
+                    showConfigMessage();
+                    return;
+                }
+                setTimeout(initializeFirebase, 100);
                 return;
             }
-            
+
             database = window.database;
             auth = window.auth;
             ref = window.ref;
@@ -726,6 +727,11 @@
             signInAnonymously = window.signInAnonymously;
             onAuthStateChanged = window.onAuthStateChanged;
             
+            // Initialize UI and state now that Firebase services are ready
+            renderQuestions();
+            renderAnswerCards();
+            updateQuestionCount();
+
             // Check if Firebase is properly configured
             if (!window.firebaseConfig || window.firebaseConfig.apiKey === 'YOUR_API_KEY') {
                 showConfigMessage();
@@ -940,7 +946,8 @@
 
                     const counter = document.createElement('div');
                     counter.className = 'answer-counter';
-                    counter.textContent = state.votes[question.id][answer] || 0;
+                    const questionVotes = state.votes[question.id] || {};
+                    counter.textContent = questionVotes[answer] || 0;
                     counter.dataset.answer = answer;
 
                     option.appendChild(label);
@@ -1216,13 +1223,9 @@
 
         // ============ INITIALIZE ============
         initializeFirebase();
-        // Start empty; user will create questions and answers manually
+        // Setup initial empty state (will be populated by Firebase sync)
         state.answers = [];
         state.questions = [];
-        initializeVotes();
-        renderQuestions();
-        renderAnswerCards();
-        updateQuestionCount();
     </script>
 </body>
 </html>
