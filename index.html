@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com 'sha256-nv1IF/t+X1eifeYnvSM4qUQUX68g+GPJbIVu0O828Cw=' 'sha256-i6cDSHlQbO84AmWBdT8tg+KM1S8JBvw55pxl3E2udYc='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://www.gstatic.com;">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Team Discussion Board</title>
     <!-- Firebase SDK -->
@@ -53,7 +54,6 @@
 
         // Make Firebase services available globally
         window.firebaseConfig = firebaseConfig;
-        window.database = database;
         window.auth = auth;
         window.ref = ref;
         window.set = set;
@@ -407,8 +407,30 @@
             font-weight: 700;
             font-size: 0.95em;
             color: #333;
-            min-width: 20px;
+            min-width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
             text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .answer-counter.highest {
+            background: #28a745;
+            color: white;
+            min-width: 32px;
+            height: 32px;
+            font-size: 1.05em;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+            animation: winnerPop 0.4s ease;
+        }
+
+        @keyframes winnerPop {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.3); }
+            100% { transform: scale(1); }
         }
 
         .answer-counter.pop {
@@ -933,6 +955,12 @@
                 options.className = 'answer-options';
 
                 const colorClasses = ['option-a', 'option-b', 'option-c'];
+
+                // Find the highest vote count for this question (only if > 0)
+                const questionVotes = state.votes[question.id] || {};
+                const voteCounts = state.answers.map(a => questionVotes[a] || 0);
+                const maxVotes = Math.max(...voteCounts);
+
                 state.answers.forEach((answer, idx) => {
                     const option = document.createElement('div');
                     const answerClass = colorClasses[idx % colorClasses.length];
@@ -943,9 +971,12 @@
                     label.textContent = String.fromCharCode(65 + (idx % 26)); // A, B, C...
 
                     const counter = document.createElement('div');
-                    counter.className = 'answer-counter';
-                    const questionVotes = state.votes[question.id] || {};
-                    counter.textContent = questionVotes[answer] || 0;
+                    const voteCount = questionVotes[answer] || 0;
+
+                    // Highlight the highest only if at least 1 vote exists
+                    const isHighest = maxVotes > 0 && voteCount === maxVotes;
+                    counter.className = 'answer-counter' + (isHighest ? ' highest' : '');
+                    counter.textContent = voteCount;
                     counter.dataset.answer = answer;
 
                     option.appendChild(label);
