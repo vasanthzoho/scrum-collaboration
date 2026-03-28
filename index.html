@@ -728,11 +728,6 @@
             runTransaction = window.runTransaction;
             signInAnonymously = window.signInAnonymously;
             onAuthStateChanged = window.onAuthStateChanged;
-            
-            // Initialize UI and state now that Firebase services are ready
-            renderQuestions();
-            renderAnswerCards();
-            updateQuestionCount();
 
             // Check if Firebase is properly configured
             if (!window.firebaseConfig || window.firebaseConfig.apiKey === 'YOUR_API_KEY') {
@@ -937,14 +932,15 @@
                 const options = document.createElement('div');
                 options.className = 'answer-options';
 
+                const colorClasses = ['option-a', 'option-b', 'option-c'];
                 state.answers.forEach((answer, idx) => {
                     const option = document.createElement('div');
-                    const answerClass = ['option-a', 'option-b', 'option-c'][idx];
+                    const answerClass = colorClasses[idx % colorClasses.length];
                     option.className = `answer-option ${answerClass}`;
 
                     const label = document.createElement('div');
                     label.className = 'answer-label-pill';
-                    label.textContent = String.fromCharCode(65 + idx); // A, B, C
+                    label.textContent = String.fromCharCode(65 + (idx % 26)); // A, B, C...
 
                     const counter = document.createElement('div');
                     counter.className = 'answer-counter';
@@ -980,9 +976,10 @@
                 emptyMsg.textContent = 'No answers. Add one to continue.';
                 answerCardsContainer.appendChild(emptyMsg);
             } else {
+                const colorClasses = ['option-a', 'option-b', 'option-c'];
                 state.answers.forEach((answer, idx) => {
                     const card = document.createElement('div');
-                    const answerClass = ['option-a', 'option-b', 'option-c'][idx];
+                    const answerClass = colorClasses[idx % colorClasses.length];
                     card.className = `answer-card ${answerClass}`;
                     card.draggable = true;
                     card.dataset.answer = answer;
@@ -1074,7 +1071,7 @@
             // Get current questions to determine next ID
             onValue(questionsRef, (snapshot) => {
                 const currentQuestions = snapshot.val() || {};
-                const questionsArray = Object.values(currentQuestions);
+                const questionsArray = Object.values(currentQuestions || {});
                 const maxId = questionsArray.length > 0 ? Math.max(...questionsArray.map(q => q.id || 0)) : 0;
                 
                 const newQuestions = lines.map((text, idx) => ({
