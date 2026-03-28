@@ -1,4 +1,4 @@
 node_modules/
 # Local-only config (do not commit)
-firebase-config.local.js
+
 # firebase-config.deploy.js is intentionally committed for GitHub Pages
