@@ -53,7 +53,7 @@
         const auth = getAuth(app);
 
         // Make Firebase services available globally
-        window.database = database;
+        window.firebaseConfig = firebaseConfig;
         window.auth = auth;
         window.ref = ref;
         window.set = set;
@@ -708,7 +708,11 @@
         // Wait for Firebase to load
         function initializeFirebase() {
             if (typeof window.database === 'undefined') {
-                setTimeout(initializeFirebase, 100);
+                if (retryCount++ > 50) {  // give up after 5 seconds
+            showConfigMessage();
+            return;
+        }
+        setTimeout(initializeFirebase, 100);
                 return;
             }
             
@@ -723,7 +727,7 @@
             onAuthStateChanged = window.onAuthStateChanged;
             
             // Check if Firebase is properly configured
-            if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
+            if (!window.firebaseConfig || window.firebaseConfig.apiKey === 'YOUR_API_KEY') {
                 showConfigMessage();
                 return;
             }

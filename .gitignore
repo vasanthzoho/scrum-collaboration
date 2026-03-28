@@ -1,5 +1,4 @@
 node_modules/
-# Local Firebase credentials (do not commit)
+# Local-only config (do not commit)
 firebase-config.local.js
-# Deployment Firebase credentials (do not commit)
-firebase-config.deploy.js
+# firebase-config.deploy.js is intentionally committed for GitHub Pages
