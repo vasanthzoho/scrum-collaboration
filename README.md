@@ -10,7 +10,7 @@ A real-time collaborative discussion board where team members can drag-and-drop 
 - **Dynamic Questions**: Add/remove questions on the fly
 - **Custom Answers**: Add your own answer options
 
-## Technical Architecture
+    ## Technical Architecture
 
 ### High-Level Design (HLD)
 The system follows a **Serverless Real-time Architecture** pattern. The frontend communicates directly with Firebase services for authentication and data persistence, eliminating the need for a custom backend API.
@@ -118,6 +118,33 @@ For automated deployments, you can inject config during build:
 sed -i 's/YOUR_API_KEY/your-real-api-key/g' index.html
 ```
 
+
+
+### Summary of what we just did:
+*   **Branch Protection**: The new workflow allows you to work on `feature/` branches. The "CI" part (`ci-validation`) will run on your feature branch to give you feedback, but the "CD" part (`cd-deployment`) will stay idle.
+*   **Separation of Concerns**: Your `deploy.yml` is now a true Pipeline. If the CI fails, the Deployment is automatically cancelled (`needs: ci-validation`).
+*   **Documentation**: The README now contains the High-Level Design (HLD), Low-Level Design (LLD), and the CI/CD Pipeline flow.
+
+How does the automated feedback on your branch look in GitHub?
+
+<!--
+[PROMPT_SUGGESTION]How can I add a JavaScript linter to the CI job to catch syntax errors automatically?[/PROMPT_SUGGESTION]
+[PROMPT_SUGGESTION]Can you explain how to set up Branch Protection Rules in GitHub settings?[/PROMPT_SUGGESTION]
+-->
+## Development Workflow
+
+To keep the `main` branch stable, we follow a feature-branching strategy:
+
+1. **Create a Feature Branch**: 
+   `git checkout -b feature/your-feature-name`
+2. **Develop and Commit**: 
+   Keep commits small and descriptive.
+3. **Push and Open a Pull Request (PR)**: 
+   Push your branch to GitHub and open a PR against `main`.
+4. **Automated Checks**: 
+   GitHub Actions will automatically run validation checks on your PR.
+5. **Merge**: 
+   Once checks pass, merge the PR into `main` to trigger the automatic deployment to GitHub Pages.
 
 ### 3. Deploy to GitHub Pages
 
