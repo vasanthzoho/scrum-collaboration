@@ -10,6 +10,73 @@ A real-time collaborative discussion board where team members can drag-and-drop 
 - **Dynamic Questions**: Add/remove questions on the fly
 - **Custom Answers**: Add your own answer options
 
+## Technical Architecture
+
+### High-Level Design (HLD)
+The system follows a **Serverless Real-time Architecture** pattern. The frontend communicates directly with Firebase services for authentication and data persistence, eliminating the need for a custom backend API.
+
+```mermaid
+graph TD
+    subgraph Client_Tier [Client Tier]
+        User([User Browser])
+        JS_App[Vanilla JS App]
+    end
+
+    subgraph Firebase_Cloud [Firebase Cloud Services]
+        Auth[Firebase Auth - Anonymous]
+        RTDB[(Realtime Database)]
+    end
+
+    User <--> JS_App
+    JS_App <-->|JWT Token| Auth
+    JS_App <-->|WebSocket/WSS| RTDB
+    RTDB -.->|Broadcast Changes| JS_App
+```
+
+### Low-Level Design (LLD)
+The application logic is driven by an **Asynchronous Event-Driven State Machine**. 
+
+#### 1. Data Flow & Synchronization
+The app maintains a local `state` object that is kept in "eventual consistency" with the Firebase Realtime Database.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI as DOM/UI
+    participant Logic as Event Handlers
+    participant FB as Firebase RTDB
+
+    User->>UI: Drag Answer to Question
+    UI->>Logic: handleDrop(questionId, answer)
+    Note over Logic: Execute Atomic Transaction
+    Logic->>FB: runTransaction(voteCount + 1)
+    FB-->>Logic: Transaction Success
+    FB->>Logic: onValue() Broadcast
+    Logic->>UI: renderQuestions() with New Totals
+```
+
+#### 2. Key Components
+| Component | Responsibility |
+| :--- | :--- |
+| `initializeFirebase` | Manages the async loading of the Firebase SDK and initialization of global services. |
+| `setupRealtimeSync` | Establishes `onValue` listeners for `answers`, `questions`, and `votes` nodes. |
+| `handleDrop` | Coordinates the Drag & Drop API and triggers the atomic vote increment. |
+| `renderQuestions` | The primary reconciliation engine that builds the DOM based on the current `state`. |
+| `runTransaction` | Ensures data integrity during concurrent voting (Atomic Increment). |
+
+#### 3. Data Schema (Realtime DB)
+```json
+{
+  "rooms": {
+    "room_id": {
+      "answers": { "key": "Answer Text" },
+      "questions": { "key": { "id": 1, "text": "..." } },
+      "votes": { "question_id": { "answer_text": 10 } }
+    }
+  }
+}
+```
+
 ## Setup Instructions
 
 ### 1. Firebase Configuration
